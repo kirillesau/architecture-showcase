@@ -57,5 +57,15 @@ services:
       - SPRING_CLOUD_CONSUL_HOST=consul-server-bootstrap
     networks:
       - consul-demo
+
+  demo-service:
+    image: kirillesau/spring-demo-application
+    deploy:
+      replicas: 3
+    environment:
+      - spring.cloud.consul.host=consul-server-bootstrap
+    networks:
+      - consul-demo
+
 networks:
   consul-demo:
