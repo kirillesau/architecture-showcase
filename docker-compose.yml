@@ -60,7 +60,7 @@ services:
     networks:
       - consul-demo
 
-  demo-service:
+  spring-demo-application:
     image: kirillesau/spring-demo-application
     depends_on:
       - consul-server-bootstrap
