@@ -52,7 +52,7 @@ services:
   gateway:
     image: kirillesau/spring-gateway-showcase
     ports:
-      - "8888:8080"ˆ
+      - "8888:8080"
     environment:
       - SPRING_CLOUD_CONSUL_HOST=consul-server-bootstrap
     networks:
