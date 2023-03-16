@@ -64,12 +64,28 @@ services:
     image: kirillesau/spring-demo-application
     depends_on:
       - consul-server-bootstrap
+      - spring-demo-db
     deploy:
       replicas: 3
     environment:
       - spring.cloud.consul.host=consul-server-bootstrap
+      - spring.datasource.url=jdbc:postgresql://spring-demo-db:5432/postgres
+      - spring.datasource.driver-class-name=org.postgresql.Driver
+      - spring.datasource.username=postgres
+      - spring.datasource.password=mypw123
+      - spring.jpa.hibernate.ddl-auto=update
+      - spring.sql.init.mode=always
     networks:
       - consul-demo
+      - spring-demo
+
+  spring-demo-db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=mypw123
+    networks:
+      - spring-demo
 
 networks:
   consul-demo:
+  spring-demo:
