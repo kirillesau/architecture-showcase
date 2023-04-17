@@ -1,56 +1,52 @@
-version: '3'
+version: '3.9'
 
 services:
-  consul-agent-1:
-    image: consul:latest
-    networks:
-      - consul-demo
-    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
 
-  consul-server-1:
-    # Uses only image and networks from 'consul-agent-1'
-    # while 'command' is overwritten
-    image: consul:latest
-    networks:
-      - consul-demo
-    command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
-
-  consul-server-bootstrap:
-    # Uses only image and networks from 'consul-agent-1'
-    # while 'command' is overwritten and 'ports' are defined
-    image: consul:latest
-    depends_on:
-      - consul-agent-1
-      - consul-server-1
+  consul-server:
+    image: hashicorp/consul:1.15.2
+    container_name: consul-server
+    restart: always
+    volumes:
+      - ./consul/server.json:/consul/config/server.json:ro
+      - ./consul/kv-store:/consul/config/kv-store
+      - consul:/consul/data
     networks:
       - consul-demo
     ports:
-      - "8400:8400"
       - "8501:8500"
-      - "8600:8600"
-      - "8600:8600/udp"
-    command: "agent -server -bootstrap-expect 1 -ui -client 0.0.0.0"
+    command: "agent"
+
+  consul-client:
+    image: hashicorp/consul:1.15.2
+    container_name: consul-client
+    restart: always
+    volumes:
+      - ./consul/client.json:/consul/config/client.json:ro
+    networks:
+      - consul-demo
+    command: "agent"
 
   gateway:
     image: kirillesau/spring-gateway-showcase
     depends_on:
-      - consul-server-bootstrap
+      - consul-server
     ports:
       - "8888:8080"
     environment:
-      - SPRING_CLOUD_CONSUL_HOST=consul-server-bootstrap
+      - SPRING_CLOUD_CONSUL_HOST=consul-server
     networks:
       - consul-demo
 
   spring-demo-application:
     image: kirillesau/spring-demo-application
     depends_on:
-      - consul-server-bootstrap
+      - consul-client
+      - consul-server
       - spring-demo-db
     deploy:
       replicas: 3
     environment:
-      - spring.cloud.consul.host=consul-server-bootstrap
+      - spring.cloud.consul.host=consul-server
       - spring.datasource.url=jdbc:postgresql://spring-demo-db:5432/postgres
       - spring.datasource.driver-class-name=org.postgresql.Driver
       - spring.datasource.username=postgres
@@ -71,3 +67,5 @@ services:
 networks:
   consul-demo:
   spring-demo:
+volumes:
+  consul:

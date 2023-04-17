@@ -1,0 +1,42 @@
+spring:
+  cloud:
+    consul:
+      discovery:
+        enabled: true
+        #Nur Services, die den Health-Check ueberstehen
+        query-passing: true
+
+    gateway:
+      routes:
+        - id: book-routing
+          uri: lb://spring-demo-application
+          predicates:
+            - Path=/book/**
+        - id: test-book-routing
+          uri: lb://spring-demo-application
+          predicates:
+            - Path=/test/book/**
+          filters:
+            - RewritePath=/test/(?<path>.*), /$\{path}
+        - id: demo-routing
+          uri: lb://spring-demo-application
+          predicates:
+            - Path=/demo/**
+      discovery:
+        locator:
+          enabled: true
+      globalcors:
+        cors-configurations:
+          '[**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedHeaders:
+              - "*"
+            allowedMethods:
+              - "GET"
+              - "POST"
+              - "OPTIONS"
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            methods: GET,POST
